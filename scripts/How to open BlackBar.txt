@@ -1,0 +1,27 @@
+BLACKBAR.  —  a persistent AI bar at the bottom of your Mac
+
+INSTALL
+1. Drag BlackBarAI into the Applications folder (in this window).
+2. Open Applications and double-click BlackBarAI.
+
+FIRST LAUNCH (BlackBar isn't from the App Store, so macOS asks once)
+- If you see "Apple could not verify BlackBarAI…", click Done.
+- Open System Settings → Privacy & Security, scroll down, and click
+  "Open Anyway" next to BlackBarAI. Confirm with your password.
+- On older macOS: right-click BlackBarAI → Open → Open.
+
+SET UP (about 1 minute)
+1. The Settings window opens by itself the first time.
+2. Get a free Gemini API key at https://aistudio.google.com/apikey
+   (or use a Claude key from https://console.anthropic.com).
+3. Paste it in, click SAVE KEY, close Settings.
+
+USE
+- Click the thin black bar at the bottom of your screen, type, press Return.
+- ⌃⌥Space   show / hide the bar
+- ⌥B        black out the bar instantly
+- ⌃⌥,       open Settings (text size, bar height, True Blackout, shortcuts)
+- Esc       clear the conversation and go back to your document
+- The ▭ icon in the menu bar has Settings and Quit.
+
+Works on macOS 14 (Sonoma) or newer, Apple Silicon and Intel.
