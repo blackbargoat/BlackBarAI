@@ -5,15 +5,15 @@
 Keep working in Google Docs (or anything else). Click the bar, ask, and read the answer right
 there, without switching apps, opening a browser tab, or losing your place.
 
-[![BlackBar demo: asking for an essay opening line from the bar and pasting it into a Google Doc](docs/blackbar-demo.gif)](docs/blackbar-demo.mp4)
+[![BlackBar demo: True Blackout keeps the bar black while you type and read, and ⌥B blanks it instantly](docs/blackbar-demo.gif)](docs/blackbar-demo.mp4)
 
-<sub>Writing an essay in Google Docs: ask BlackBar for opening lines, ask it to tighten one, copy, Esc back to the Doc, paste. The answers are real Gemini output. [Watch in HD (MP4)](docs/blackbar-demo.mp4)</sub>
+<sub>**True Blackout:** your question and the answer are drawn in the bar's own black, so anyone glancing at your screen sees an empty bar. Peek with ⌘A, double-click the answer to reveal it, and ⌥B blanks the bar instantly. The answer shown is real Gemini output. [Watch in HD (MP4)](docs/blackbar-demo.mp4)</sub>
 
 - **Always there.** Floats above every app and every Space, including full-screen apps.
 - **Never steals focus.** You can type in the bar while your document stays the front app. Esc hands the keyboard back.
 - **Reads your Google Doc.** It sees which Doc is open in your browser and can read it and add answers to the end of it.
 - **Your keys, your data.** Bring your own Gemini (free) or Claude API key. There's no server, account or tracking. Requests go straight from your Mac to the model provider.
-- **Discreet.** ⌥B blacks out the bar instantly. *True Blackout* renders the text in the bar's own black, so you only see it when you select it.
+- **True Blackout.** Turn it on in Settings and everything in the bar, including your question, the answer and the cursor, is drawn in the bar's own black. Only you can read it: ⌘A to peek, double-click an answer to reveal it. ⌥B blanks the bar instantly.
 
 Works on macOS 14 (Sonoma) or newer, Apple Silicon and Intel.
 

@@ -3,5 +3,7 @@
  "a1": "Forget gold or crypto\u2014the world\u2019s most aggressive market is trading in your focus.\nEvery notification is a transaction, and your mind is paying the bill.\nIn an economy built on infinite noise, human attention has become the ultimate monopoly.",
  "q2": "Make the second one shorter. Just the line.",
  "a2": "Every notification costs your focus.",
- "model": "gemini-3.6-flash"
+ "model": "gemini-3.6-flash",
+ "bq": "Quick: polite one-line reply to my boss. The essay draft isn't done, I need one more day.",
+ "ba": "Hi [Name], I'm putting the finishing touches on the essay draft and need one extra day to finalize it\u2014I'll send it over tomorrow."
 }
