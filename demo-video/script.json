@@ -1,0 +1,7 @@
+{
+ "q1": "Give me 3 punchy opening lines for an essay about attention being the world's most valuable currency. One per line, no numbering.",
+ "a1": "Forget gold or crypto\u2014the world\u2019s most aggressive market is trading in your focus.\nEvery notification is a transaction, and your mind is paying the bill.\nIn an economy built on infinite noise, human attention has become the ultimate monopoly.",
+ "q2": "Make the second one shorter. Just the line.",
+ "a2": "Every notification costs your focus.",
+ "model": "gemini-3.6-flash"
+}

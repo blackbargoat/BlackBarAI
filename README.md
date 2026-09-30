@@ -5,6 +5,10 @@
 Keep working in Google Docs (or anything else). Click the bar, ask, and read the answer right
 there, without switching apps, opening a browser tab, or losing your place.
 
+[![BlackBar demo: asking for an essay opening line from the bar and pasting it into a Google Doc](docs/blackbar-demo.gif)](docs/blackbar-demo.mp4)
+
+<sub>Writing an essay in Google Docs: ask BlackBar for opening lines, ask it to tighten one, copy, Esc back to the Doc, paste. The answers are real Gemini output. [Watch in HD (MP4)](docs/blackbar-demo.mp4)</sub>
+
 - **Always there.** Floats above every app and every Space, including full-screen apps.
 - **Never steals focus.** You can type in the bar while your document stays the front app. Esc hands the keyboard back.
 - **Reads your Google Doc.** It sees which Doc is open in your browser and can read it and add answers to the end of it.
@@ -141,6 +145,9 @@ Sources/BlackBarAI/
 ```
 
 New document sources implement `DocumentContextProvider`; the UI only talks to that protocol.
+
+The demo video is rendered from `demo-video/scene.html` (a virtual Mac recreating the bar) by
+`demo-video/record.mjs`; `script.json` holds the real model answers it shows.
 
 ## Privacy
 

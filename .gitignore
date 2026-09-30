@@ -5,3 +5,9 @@ dist/
 launch-video/
 *.xcodeproj/
 .swiftpm/
+demo-video/frames/
+demo-video/stills/
+demo-video/node_modules
+demo-video/*.mp4
+demo-video/*.gif
+demo-video/*.png

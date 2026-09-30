@@ -18,6 +18,18 @@ struct DemoDirector {
         let first = first ?? "Give me 3 punchy opening lines for an essay about attention being the world's most valuable currency. One per line, no numbering."
         let followUp = followUp ?? "Make the second one shorter. Just the line."
 
+        // Readable on camera: bright, larger text. The user's look is restored after.
+        let prefs = model.prefs
+        let saved = (blackout: prefs.trueBlackout, size: prefs.fontSize)
+        prefs.trueBlackout = false
+        prefs.fontSize = 15
+        prefs.demoBright = true
+        defer {
+            prefs.demoBright = false
+            prefs.trueBlackout = saved.blackout
+            prefs.fontSize = saved.size
+        }
+
         model.clearConversation()
         await pause(1.0)
         panels.focusInput()

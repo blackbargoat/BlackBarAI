@@ -1,0 +1,312 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- BlackBar demo scene. Every frame is a pure function of time: window.setT(seconds).
+     record.mjs steps t at 60 fps and screenshots each frame. -->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#050505;
+    font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  #stage{position:absolute;inset:0;overflow:hidden;
+    background:radial-gradient(1200px 700px at 50% 38%,#1a1a1a 0%,#0c0c0c 55%,#050505 100%)}
+  #cam{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+
+  /* the virtual Mac screen */
+  #display{position:absolute;left:160px;top:40px;width:1600px;height:1000px;border-radius:18px;overflow:hidden;
+    box-shadow:0 0 0 1px #262626,0 0 0 9px #0b0b0b,0 0 0 10px #2a2a2a,0 40px 120px rgba(0,0,0,.75)}
+  #wall{position:absolute;inset:0;background:
+    radial-gradient(900px 600px at 18% 20%,#3b4250 0%,transparent 60%),
+    radial-gradient(1000px 700px at 85% 75%,#4a4038 0%,transparent 60%),
+    linear-gradient(160deg,#23262d,#1b1c20 55%,#221f1d)}
+  #menubar{position:absolute;left:0;top:0;right:0;height:26px;background:rgba(20,20,22,.55);
+    backdrop-filter:blur(20px);color:#f2f2f2;font-size:13.5px;display:flex;align-items:center;padding:0 14px;gap:20px}
+  #menubar b{font-weight:700}
+  #menubar .r{margin-left:auto;display:flex;gap:16px;align-items:center;opacity:.95}
+  .mbicon{width:17px;height:12px;border:1.6px solid #f2f2f2;border-radius:3px;position:relative}
+  .mbicon:after{content:"";position:absolute;left:1.5px;right:1.5px;bottom:1.5px;height:4px;background:#f2f2f2;border-radius:1px}
+
+  /* browser window */
+  #win{position:absolute;left:56px;top:44px;width:1488px;height:870px;border-radius:12px;overflow:hidden;
+    background:#f1f3f4;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 22px 60px rgba(0,0,0,.5)}
+  #tabs{height:40px;background:#dfe3e8;display:flex;align-items:flex-end;padding-left:84px;position:relative}
+  .lights{position:absolute;left:16px;top:14px;display:flex;gap:8px}
+  .lights i{width:12px;height:12px;border-radius:50%;display:block}
+  .tab{height:32px;width:250px;background:#fff;border-radius:9px 9px 0 0;display:flex;align-items:center;gap:8px;
+    padding:0 12px;font-size:12.5px;color:#202124}
+  .tab .fav{width:14px;height:17px;border-radius:2px;background:#4285f4;position:relative}
+  .tab .fav:after{content:"";position:absolute;left:3px;right:3px;top:5px;height:1.5px;background:#fff;box-shadow:0 3px 0 #fff,0 6px 0 #fff}
+  #addr{height:42px;background:#fff;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid #e3e3e3}
+  #addr .dots{display:flex;gap:16px;color:#5f6368;font-size:16px}
+  #addr .url{flex:1;height:30px;border-radius:15px;background:#f1f3f4;display:flex;align-items:center;padding:0 14px;
+    font-size:13.5px;color:#3c4043}
+  #appbar{height:62px;background:#f9fbfd;display:flex;align-items:center;gap:12px;padding:0 16px}
+  #appbar .docicon{width:26px;height:34px;border-radius:3px;background:#4285f4;position:relative}
+  #appbar .docicon:after{content:"";position:absolute;left:6px;right:6px;top:12px;height:2px;background:#fff;box-shadow:0 5px 0 #fff,0 10px 0 #fff}
+  #appbar .t{font-size:17px;color:#202124}
+  #appbar .m{font-size:13px;color:#444;display:flex;gap:14px;margin-top:3px}
+  #appbar .share{margin-left:auto;background:#c2e7ff;color:#001d35;border-radius:18px;padding:9px 20px;font-size:14px;font-weight:600}
+  #fmt{height:40px;background:#edf2fa;margin:0 12px;border-radius:20px;display:flex;align-items:center;gap:18px;padding:0 18px;color:#444;font-size:13px}
+  #fmt .sep{width:1px;height:20px;background:#c7c7c7}
+  #canvas{position:absolute;left:0;right:0;top:196px;bottom:0;background:#f9fbfd;overflow:hidden}
+  #page{position:absolute;left:50%;top:22px;width:816px;margin-left:-408px;height:1100px;background:#fff;
+    box-shadow:0 1px 3px rgba(60,64,67,.25);padding:96px 96px;color:#202124;font-family:Arial,Helvetica,sans-serif}
+  #page h1{font-size:26px;font-weight:700;margin-bottom:12px;letter-spacing:-.2px}
+  #page p{font-size:14.6px;line-height:1.55;margin-bottom:14px}
+  #draft{display:inline;font-size:14.6px}
+  #draft.sel{background:#c8dafd}
+  #draft.pasted{font-size:17px;font-weight:600;font-style:italic}
+  .dcaret{display:inline-block;width:1.5px;height:18px;background:#202124;vertical-align:-3px;margin-left:1px}
+
+  /* BlackBar: flush along the bottom of the screen */
+  #bar{position:absolute;left:0;right:0;bottom:0;height:56px;background:#000}
+  #box{position:absolute;left:504px;width:592px;top:3px;height:50px;overflow:hidden}
+  #input,#trans{position:absolute;left:0;right:0;top:0;padding:0 11px;font-size:16px;color:#f5f5f5}
+  #input{top:5px;line-height:20px;height:40px;overflow:hidden}
+  #input .inner{position:relative}
+  .caret{display:inline-block;width:1.6px;height:18px;background:#f5f5f5;vertical-align:-3px;margin-left:1px}
+  #trans{padding:5px 11px}
+  #trans .lines{position:relative}
+  #trans .ln{line-height:20px;margin-bottom:4px}
+  #trans .ln span.s{background:#2c2c2c}
+  .spin{width:12px;height:12px;border-radius:50%;border:1.8px solid #5a5a5a;border-top-color:#cfcfcf;margin:4px 0 8px}
+
+  /* cursor */
+  #cursor{position:absolute;left:0;top:0;width:26px;height:38px;pointer-events:none;z-index:50}
+  .rip{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2.5px solid rgba(255,255,255,.9);z-index:49}
+
+  /* keycap chips (screen space, not zoomed) */
+  #chip{position:absolute;left:50%;top:70px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;
+    padding:12px 18px;border-radius:16px;background:rgba(18,18,18,.82);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 12px 40px rgba(0,0,0,.5);
+    color:#e9e9e9;font-size:21px;font-weight:600;letter-spacing:.1px;white-space:nowrap;z-index:60}
+  .k{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:40px;padding:0 12px;border-radius:9px;
+    background:linear-gradient(#fafafa,#e3e3e3);color:#111;font-weight:700;font-size:19px;box-shadow:0 2px 0 #9a9a9a}
+  #chip .lbl{margin-left:6px;color:#bdbdbd;font-weight:500}
+
+  #endcard{position:absolute;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;z-index:80}
+  #endcard .tag{color:#d8d8d8;font-size:30px;font-weight:500;letter-spacing:.2px}
+  #endcard .url{color:#8a8a8a;font-size:22px;font-weight:500;letter-spacing:.4px;font-family:"SF Mono",Menlo,monospace}
+  #fade{position:absolute;inset:0;background:#000;z-index:90;pointer-events:none}
+</style></head>
+<body>
+<div id="stage">
+  <div id="cam">
+    <div id="display">
+      <div id="wall"></div>
+      <div id="menubar"><span style="font-size:15px"></span><b>Chrome</b><span>File</span><span>Edit</span><span>View</span><span>History</span><span>Bookmarks</span><span>Window</span><span>Help</span>
+        <div class="r"><div class="mbicon"></div><span>Tue 9:41 AM</span></div></div>
+      <div id="win">
+        <div id="tabs"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+          <div class="tab"><div class="fav"></div>The Quiet Economics of Attention</div></div>
+        <div id="addr"><div class="dots">‹ &nbsp;› &nbsp;↻</div><div class="url">docs.google.com/document/d/1rTg…/edit</div></div>
+        <div id="appbar"><div class="docicon"></div><div><div class="t">The Quiet Economics of Attention</div>
+          <div class="m"><span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Format</span><span>Tools</span><span>Extensions</span><span>Help</span></div></div>
+          <div class="share">Share</div></div>
+        <div id="fmt"><span>↶ ↷</span><div class="sep"></div><span>100%</span><div class="sep"></div><span>Normal text</span><div class="sep"></div><span>Arial</span><div class="sep"></div><span>− 11 +</span><div class="sep"></div><b>B</b><i>I</i><u>U</u></div>
+        <div id="canvas"><div id="page">
+          <h1>The Quiet Economics of Attention</h1>
+          <p><span id="draft" class="sel">Draft · Opening line goes here</span><span id="dcaret" class="dcaret" style="opacity:0"></span></p>
+          <p>Every app on your phone is competing for the same scarce resource, and it isn't your money. It is the few hours a day when you are awake, alert, and able to care about something. Companies have learned to measure those hours down to the second, and to price them.</p>
+          <p>What makes this market unusual is that the product and the customer are the same person. We spend our attention, and in exchange we are sold to advertisers as an audience. The cost rarely shows up on a receipt. It shows up as a book left unfinished, a conversation half-heard, a thought that never quite forms.</p>
+          <p>The answer is not to log off forever. It is to notice where our attention goes, decide on purpose where we want it to go, and build small habits, and tools, that protect it.</p>
+        </div></div>
+      </div>
+      <div id="bar"><div id="box">
+        <div id="input"><div class="inner"><span id="itext"></span><span id="icaret" class="caret"></span></div></div>
+        <div id="trans"><div class="lines" id="tlines"></div></div>
+      </div></div>
+    </div>
+    <svg id="cursor" viewBox="0 0 26 38"><path d="M3 2 L3 30 L10 23.5 L14.5 34 L19 32 L14.6 21.8 L23.5 21.8 Z" fill="#000" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+    <div id="rip" class="rip" style="opacity:0"></div>
+  </div>
+  <div id="chip" style="opacity:0"></div>
+  <div id="endcard" style="opacity:0">
+    <svg id="logo" height="96"></svg>
+    <div class="tag">An AI in a black bar. Always there, never in the way.</div>
+    <div class="url">github.com/blackbargoat/BlackBarAI</div>
+  </div>
+  <div id="fade"></div>
+</div>
+<script>
+const S = window.SCRIPT;   // {q1,a1,q2,a2}, injected by record.mjs
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const seg = (t, a, b) => ease((t - a) / (b - a));
+
+// ---------------------------------------------------------------- timeline (seconds)
+const T = {
+  moveA: 1.5, moveB: 2.5, click: 2.6, typeQ1: 3.1, send1: 0, strm1: 0, scroll1: 0, scroll2: 0,
+};
+// typing: fixed per-character schedule with a little human jitter (seeded, deterministic)
+function schedule(text, start, cps) {
+  let s = 1234567, t = start; const out = [];
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (const ch of text) { out.push(t); t += (ch === " " ? 1.25 : 0.75 + rnd() * 0.6) / cps; }
+  return { times: out, end: t };
+}
+const q1 = schedule(S.q1, T.typeQ1, 30);
+T.send1 = q1.end + 0.45; T.strm1 = T.send1 + 0.85;
+const a1End = T.strm1 + 1.3;
+T.scroll1 = a1End + 1.7; T.scroll2 = T.scroll1 + 1.7;
+T.typeQ2 = T.scroll2 + 1.8;
+const q2 = schedule(S.q2, T.typeQ2, 26);
+T.send2 = q2.end + 0.45; T.strm2 = T.send2 + 0.7;
+const a2End = T.strm2 + 0.45;
+T.selAll = a2End + 1.3; T.copy = T.selAll + 0.7;
+T.esc = T.copy + 1.2; T.paste = T.esc + 1.5;
+T.wide = T.paste + 1.9; T.end = T.wide + 1.7; T.total = T.end + 4.2;
+window.TOTAL = T.total; window.T = T;
+
+// ---------------------------------------------------------------- camera keyframes [t, zoom, cx, cy] (stage coords)
+const WIDE = [1, 960, 540];
+const BAR = [2.15, 960, 818];       // bar at the bottom of frame, Doc above it
+const DOC = [1.7, 960, 430];
+const cams = () => [
+  [0, ...WIDE], [1.7, ...WIDE], [3.0, ...BAR], [T.esc + 0.1, ...BAR], [T.esc + 1.3, ...DOC],
+  [T.wide, ...DOC], [T.wide + 1.3, ...WIDE]];
+function camera(t) {
+  const k = cams();
+  for (let i = 1; i < k.length; i++) if (t <= k[i][0]) {
+    const a = k[i - 1], b = k[i], e = ease((t - a[0]) / (b[0] - a[0]));
+    // interpolate zoom in log space so the move feels even
+    const z = Math.exp(Math.log(a[1]) + (Math.log(b[1]) - Math.log(a[1])) * e);
+    return [z, a[2] + (b[2] - a[2]) * e, a[3] + (b[3] - a[3]) * e];
+  }
+  return k[k.length - 1].slice(1);
+}
+
+// ---------------------------------------------------------------- helpers
+const DX = 160, DY = 40;                    // display origin in stage
+const BOXX = DX + 504 + 11, BARY = DY + 1000 - 28;
+function typed(text, sch, t) { let n = 0; while (n < sch.times.length && sch.times[n] <= t) n++; return text.slice(0, n); }
+function streamed(text, a, b, t) {   // arrives in chunks, like SSE
+  const p = clamp((t - a) / (b - a)); if (p <= 0) return "";
+  const chunk = 14, n = Math.ceil(p * text.length / chunk) * chunk; return text.slice(0, n);
+}
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+function renderInput(text, caretOn) {
+  $("itext").textContent = text;
+  $("icaret").style.opacity = caretOn ? 1 : 0;
+  const inner = document.querySelector("#input .inner");
+  const lines = Math.max(1, Math.round(inner.scrollHeight / 20));
+  inner.style.transform = `translateY(${-Math.max(0, lines - 2) * 20}px)`;   // keep the last line in view
+}
+function renderTranscript(msgs, scrollLine, scrollP, selected) {
+  // msgs: [{role, text, spinner}] ; scroll so line `scrollLine` of the last answer sits at the top
+  let html = "", idx = 0;
+  msgs.forEach((m, mi) => {
+    const color = m.role === "user" ? "#9e9e9e" : "#f5f5f5";
+    if (m.spinner) html += `<div class="spin" data-a="${mi}" data-l="0"></div>`;
+    m.text.split("\n").filter(Boolean).forEach((ln, li) => {
+      const c = selected ? "#c4c4c4" : color;
+      html += `<div class="ln" data-a="${mi}" data-l="${li}" style="color:${c}">${selected ? `<span class="s">${esc(ln)}</span>` : esc(ln)}</div>`;
+    });
+  });
+  $("tlines").innerHTML = html;
+  const last = msgs.length - 1;
+  const top = l => { const el = document.querySelector(`#tlines [data-a="${last}"][data-l="${l}"]`) || document.querySelector(`#tlines [data-a="${last}"]`); return el ? el.offsetTop : 0; };
+  const y0 = top(Math.max(0, scrollLine - 1)), y1 = top(scrollLine);
+  const y = scrollLine > 0 ? y0 + (y1 - y0) * scrollP : y1;
+  $("tlines").style.transform = `translateY(${-y}px)`;
+}
+
+// ---------------------------------------------------------------- BLACKBAR. wordmark (port of Views/BoxFont.swift)
+function wordmark(text, size, tracking = 0.42, t = 0.13) {
+  const W = ch => ({ ".": t, "M": 1.2, " ": 0.5 }[ch] ?? 0.95);
+  let x = 0, d = "";
+  const box = (X, y, w, h) => { d += `M${X},${y}h${w}v${h}h${-w}Z`; };
+  const slant = (dx, dy) => t * Math.sqrt(dx * dx + dy * dy) / Math.max(dy, .001);
+  const diag = (X, x0, x1, y0, y1) => { const tx = slant(Math.abs(x1 - x0) + t, y1 - y0);
+    d += `M${X + x0},${y0}L${X + x0 + tx},${y0}L${X + x1 + tx},${y1}L${X + x1},${y1}Z`; };
+  for (const ch of text) {
+    const w = W(ch), r = w - t, m = (1 - t) / 2, b = 1 - t;
+    const h = (y, a = 0, e = w) => box(x + a, y, e - a, t), v = (X, y0 = 0, y1 = 1) => box(x + X, y0, t, y1 - y0);
+    switch (ch) {
+      case "A": v(0); v(r); h(0); h(m); break;
+      case "B": v(0); v(r); h(0); h(m); h(b); break;
+      case "C": v(0); h(0); h(b); break;
+      case "L": v(0); h(b); break;
+      case "K": { v(0); const tx = slant(w - t, m); diag(x, w - tx, t, 0, m + t / 2); diag(x, t, w - tx, m + t / 2, 1); break; }
+      case "R": { v(0); h(0); h(m); v(r, 0, m + t); const tx = slant(w * .5, 1 - m - t); diag(x, w * .45, w - tx, m + t, 1); break; }
+      case ".": box(x, b, t, t); break;
+    }
+    x += w + tracking;
+  }
+  const total = x - tracking, svg = $("logo");
+  svg.setAttribute("viewBox", `-0.02 -0.02 ${total + 0.04} 1.04`); svg.setAttribute("width", size * total);
+  svg.innerHTML = `<path d="${d}" fill="#fff"/>`;
+}
+wordmark("BLACKBAR.", 96);
+
+// ---------------------------------------------------------------- frame
+window.setT = function (t) {
+  // camera
+  const [z, cx, cy] = camera(t);
+  $("cam").style.transform = `translate(${960 - cx * z}px,${540 - cy * z}px) scale(${z})`;
+
+  // cursor: idle in the Doc, then glides to the bar and clicks
+  const p0 = [DX + 1000, DY + 520], p1 = [BOXX + 150, BARY + 6];
+  const mv = seg(t, T.moveA, T.moveB);
+  const drift = t < T.moveA ? [Math.sin(t * 1.3) * 6, Math.cos(t * 1.1) * 4] : [0, 0];
+  const curX = p0[0] + (p1[0] - p0[0]) * mv + drift[0], curY = p0[1] + (p1[1] - p0[1]) * mv - Math.sin(mv * Math.PI) * 60 + drift[1];
+  $("cursor").style.transform = `translate(${curX - 3}px,${curY - 2}px)`;
+  $("cursor").style.opacity = t < T.typeQ1 ? 1 : 0;      // macOS hides the pointer while you type
+  const rp = (t - T.click) / 0.5;
+  $("rip").style.opacity = rp > 0 && rp < 1 ? (1 - rp) * .9 : 0;
+  $("rip").style.left = curX + "px"; $("rip").style.top = curY + "px";
+  $("rip").style.transform = `scale(${.4 + rp * .8})`;
+
+  // bar
+  const blink = Math.floor(t * 1.9) % 2 === 0;
+  let mode = "idle";
+  if (t >= T.click && t < T.send1) mode = "q1";
+  else if (t >= T.send1 && t < T.typeQ2) mode = "a1";
+  else if (t >= T.typeQ2 && t < T.send2) mode = "q2";
+  else if (t >= T.send2 && t < T.esc) mode = "a2";
+  $("input").style.display = mode === "q1" || mode === "q2" ? "block" : "none";
+  $("trans").style.display = mode === "a1" || mode === "a2" ? "block" : "none";
+  if (mode === "q1") { const s = typed(S.q1, q1, t); renderInput(s, t < T.typeQ1 ? blink : (t > q1.end + .3 ? blink : true)); }
+  if (mode === "q2") { const s = typed(S.q2, q2, t); renderInput(s, true); }
+  if (mode === "a1") {
+    const txt = streamed(S.a1, T.strm1, a1End, t);
+    const line = t >= T.scroll2 ? 2 : t >= T.scroll1 ? 1 : 0;
+    const sp = line === 2 ? seg(t, T.scroll2, T.scroll2 + .35) : line === 1 ? seg(t, T.scroll1, T.scroll1 + .35) : 1;
+    renderTranscript([{ role: "user", text: S.q1 }, { role: "assistant", text: txt, spinner: !txt }], line, sp, false);
+  }
+  if (mode === "a2") {
+    const txt = streamed(S.a2, T.strm2, a2End, t);
+    renderTranscript([{ role: "user", text: S.q1 }, { role: "assistant", text: S.a1 }, { role: "user", text: S.q2 },
+      { role: "assistant", text: txt, spinner: !txt }], 0, 1, t >= T.selAll);
+  }
+
+  // the Doc: placeholder selected until ⌘V pastes the answer over it
+  const pasted = t >= T.paste;
+  $("draft").textContent = pasted ? S.a2 : "Draft · Opening line goes here";
+  $("draft").className = pasted ? "pasted" : (t >= T.esc ? "sel" : "sel");
+  $("dcaret").style.opacity = pasted && Math.floor((t - T.paste) * 1.9) % 2 === 0 ? 1 : 0;
+
+  // keycap chips
+  const chips = [
+    [T.send1 - .15, 1.3, `<span class="k">return</span><span class="lbl">ask</span>`],
+    [T.send2 - .15, 1.3, `<span class="k">return</span><span class="lbl">follow up</span>`],
+    [T.selAll - .1, 1.9, `<span class="k">⌘A</span><span class="k">⌘C</span><span class="lbl">copy the answer</span>`],
+    [T.esc - .1, 1.4, `<span class="k">esc</span><span class="lbl">back to your Doc</span>`],
+    [T.paste - .15, 1.7, `<span class="k">⌘V</span><span class="lbl">paste</span>`],
+  ];
+  let chip = null;
+  for (const c of chips) if (t >= c[0] && t < c[0] + c[1]) chip = c;
+  if (chip) {
+    if ($("chip").dataset.k !== String(chip[0])) { $("chip").innerHTML = chip[2]; $("chip").dataset.k = chip[0]; }
+    const a = clamp((t - chip[0]) / .18), b = clamp((chip[0] + chip[1] - t) / .25), o = Math.min(a, b);
+    $("chip").style.opacity = o;
+    $("chip").style.transform = `translateX(-50%) translateY(${(1 - a) * -10}px) scale(${.96 + .04 * a})`;
+  } else $("chip").style.opacity = 0;
+
+  // end card + fades
+  const ec = clamp((t - T.end) / .6);
+  $("endcard").style.opacity = ec;
+  $("endcard").style.transform = `scale(${1.03 - .03 * ease(ec)})`;
+  $("fade").style.opacity = Math.max(1 - clamp(t / .6), clamp((t - (T.total - .6)) / .6));
+};
+</script>
+</body></html>

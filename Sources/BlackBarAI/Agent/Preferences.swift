@@ -71,6 +71,11 @@ final class Preferences {
         didSet { save(trueBlackout, "trueBlackout"); onAppearanceChanged?() }
     }
 
+    /// Demo recordings only (not saved): bright text so it reads on camera.
+    var demoBright = false {
+        didSet { onAppearanceChanged?() }
+    }
+
     var showHideKey: KeyCombo = Preferences.loadCombo("key.showHide") ?? .showHide {
         didSet { saveCombo(showHideKey, "key.showHide") }
     }
@@ -97,9 +102,9 @@ final class Preferences {
 
     // MARK: Colors for text inside the bar
 
-    var textColor: NSColor { trueBlackout ? .black : NSColor(white: 0.30, alpha: 1) }
-    var softTextColor: NSColor { trueBlackout ? .black : NSColor(white: 0.20, alpha: 1) }
-    var caretColor: NSColor { trueBlackout ? .black : NSColor(white: 0.30, alpha: 1) }
+    var textColor: NSColor { demoBright ? NSColor(white: 0.96, alpha: 1) : trueBlackout ? .black : NSColor(white: 0.30, alpha: 1) }
+    var softTextColor: NSColor { demoBright ? NSColor(white: 0.62, alpha: 1) : trueBlackout ? .black : NSColor(white: 0.20, alpha: 1) }
+    var caretColor: NSColor { demoBright ? NSColor(white: 0.96, alpha: 1) : trueBlackout ? .black : NSColor(white: 0.30, alpha: 1) }
 
     // MARK: Storage
 
